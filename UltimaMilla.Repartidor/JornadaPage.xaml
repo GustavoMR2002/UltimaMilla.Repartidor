@@ -5,23 +5,33 @@
              x:Class="UltimaMilla.Repartidor.JornadaPage"
              Title="Mi jornada">
 
-    <Grid Padding="20"
-          RowDefinitions="Auto,Auto,*,Auto"
-          RowSpacing="16">
+    <ContentPage.Resources>
+        <Style TargetType="Border">
+            <Setter Property="Stroke" Value="#1565C0" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape"
+                    Value="RoundRectangle 12" />
+            <Setter Property="BackgroundColor"
+                    Value="{AppThemeBinding Light=#F5F8FC, Dark=#202B38}" />
+        </Style>
+    </ContentPage.Resources>
 
-        <!-- Saludo, fecha y actualización -->
+    <Grid x:Name="PaginaGrid"
+          Padding="20"
+          RowDefinitions="Auto,Auto,*,Auto"
+          RowSpacing="12">
+
+        <!-- Encabezado -->
         <Grid Grid.Row="0"
               ColumnDefinitions="*,Auto"
               ColumnSpacing="10">
 
             <VerticalStackLayout Spacing="4">
                 <Label x:Name="SaludoLabel"
-                       FontSize="24"
-                       FontAttributes="Bold" />
+                       Style="{StaticResource TituloJornada}" />
 
                 <Label x:Name="FechaLabel"
-                       FontSize="14"
-                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                       Style="{StaticResource TextoSecundario}" />
             </VerticalStackLayout>
 
             <Button x:Name="ActualizarBtn"
@@ -31,65 +41,71 @@
                     Clicked="OnActualizarClicked" />
         </Grid>
 
-        <!-- Resumen de la jornada -->
-        <Grid Grid.Row="1"
+        <!-- Tarjetas de resumen -->
+        <Grid x:Name="ResumenGrid"
+              Grid.Row="1"
               ColumnDefinitions="*,*"
               ColumnSpacing="12">
 
-            <Border Grid.Column="0"
-                    Stroke="#1565C0"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 12">
-
+            <Border Padding="12">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Entregas de hoy"
-                           FontSize="14"
-                           TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                           Style="{StaticResource TextoSecundario}" />
 
                     <Label x:Name="TotalLabel"
-                           FontSize="32"
-                           FontAttributes="Bold" />
+                           Style="{StaticResource NumeroResumen}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Grid.Column="1"
-                    Stroke="#1565C0"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 12">
-
+            <Border Grid.Column="1" Padding="12">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Entregas completadas"
-                           FontSize="14"
-                           TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                           Style="{StaticResource TextoSecundario}" />
 
                     <Label x:Name="CompletadasLabel"
-                           FontSize="32"
-                           FontAttributes="Bold" />
+                           Style="{StaticResource NumeroResumen}" />
                 </VerticalStackLayout>
             </Border>
         </Grid>
 
-        <!-- Lista de paradas -->
+        <!-- Lista con su propio desplazamiento -->
         <CollectionView x:Name="ParadasView"
-                        Grid.Row="2"
-                        SelectionMode="None">
+                Grid.Row="2"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill"
+                ItemsLayout="VerticalList"
+                ItemSizingStrategy="MeasureAllItems"
+                SelectionMode="None">
 
             <CollectionView.EmptyView>
                 <Label Text="No tienes paradas hoy"
+                       Style="{StaticResource TextoSecundario}"
                        HorizontalOptions="Center"
                        VerticalOptions="Center"
-                       HorizontalTextAlignment="Center"
-                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                       HorizontalTextAlignment="Center" />
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Parada">
-                    <Border Padding="14"
-                            Margin="0,4"
-                            Stroke="#999999"
-                            StrokeShape="RoundRectangle 10">
+                    <Border Padding="12" Margin="0,4">
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="Opacity"
+                                                Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Property="Opacity"
+                                                Value="0.55" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
 
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer
@@ -97,11 +113,10 @@
                                 CommandParameter="{Binding .}" />
                         </Border.GestureRecognizers>
 
-                        <Grid ColumnDefinitions="Auto,*,Auto"
+                        <Grid ColumnDefinitions="Auto,*"
                               ColumnSpacing="12">
 
-                            <Border Grid.Column="0"
-                                    BackgroundColor="#1565C0"
+                            <Border BackgroundColor="#1565C0"
                                     StrokeThickness="0"
                                     WidthRequest="34"
                                     HeightRequest="34"
@@ -116,52 +131,53 @@
                             </Border>
 
                             <VerticalStackLayout Grid.Column="1"
-                                                 Spacing="2">
+                                                 Spacing="3">
+
                                 <Label Text="{Binding Cliente}"
-                                       FontAttributes="Bold"
-                                       FontSize="16" />
+                                       Style="{StaticResource ClienteLabel}" />
 
                                 <Label Text="{Binding Direccion}"
-                                       FontSize="13"
-                                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
-                            </VerticalStackLayout>
+                                       Style="{StaticResource TextoSecundario}" />
 
-                            <Label Grid.Column="2"
-                                   Text="{Binding Estado}"
-                                   FontSize="12"
-                                   VerticalOptions="Center">
+                                <Label Text="{Binding Estado}">
+                                    <Label.Style>
+                                        <Style TargetType="Label">
+                                            <Setter Property="FontSize"
+                                                    Value="12" />
+                                            <Setter Property="TextColor"
+                                                    Value="Gray" />
 
-                                <Label.Style>
-                                    <Style TargetType="Label">
-                                        <Setter Property="TextColor"
-                                                Value="Gray" />
-
-                                        <Style.Triggers>
-                                            <DataTrigger TargetType="Label"
-                                                         Binding="{Binding Estado}"
-                                                         Value="Pendiente">
-                                                <Setter Property="TextColor"
+                                            <Style.Triggers>
+                                                <DataTrigger
+                                                    TargetType="Label"
+                                                    Binding="{Binding Estado}"
+                                                    Value="Pendiente">
+                                                    <Setter
+                                                        Property="TextColor"
                                                         Value="{AppThemeBinding Light=#946200, Dark=#FFD166}" />
-                                            </DataTrigger>
+                                                </DataTrigger>
 
-                                            <DataTrigger TargetType="Label"
-                                                         Binding="{Binding Estado}"
-                                                         Value="Entregada">
-                                                <Setter Property="TextColor"
+                                                <DataTrigger
+                                                    TargetType="Label"
+                                                    Binding="{Binding Estado}"
+                                                    Value="Entregada">
+                                                    <Setter
+                                                        Property="TextColor"
                                                         Value="{AppThemeBinding Light=#237A36, Dark=#81C784}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Label.Style>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                </Label>
 
-                            </Label>
+                            </VerticalStackLayout>
                         </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Controles para comprobar el comportamiento de la colección -->
+        <!-- Controles de prueba -->
         <Grid x:Name="PruebasPanel"
               Grid.Row="3"
               ColumnDefinitions="*,*"
