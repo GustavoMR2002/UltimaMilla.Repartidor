@@ -1,24 +1,52 @@
-﻿namespace UltimaMilla.Repartidor
-{
-    public partial class MainPage : ContentPage
-    {
-        int count = 0;
+﻿namespace UltimaMilla.Repartidor;
 
-        public MainPage()
+public partial class MainPage : ContentPage
+{
+    private int count = 0;
+    private bool fondoAlternativo = false;
+
+    public MainPage()
+    {
+        InitializeComponent();
+    }
+
+    private void OnCounterClicked(object? sender, EventArgs e)
+    {
+        count++;
+        ActualizarContador();
+    }
+
+    private void OnRestarClicked(object? sender, EventArgs e)
+    {
+        if (count > 0)
         {
-            InitializeComponent();
+            count--;
         }
 
-        private void OnCounterClicked(object? sender, EventArgs e)
+        ActualizarContador();
+    }
+
+    private void ActualizarContador()
+    {
+        ContadorLabel.Text = $"Contador: {count}";
+        RestarBtn.IsEnabled = count > 0;
+
+        SemanticScreenReader.Announce(ContadorLabel.Text);
+    }
+
+    private void OnCambiarFondoClicked(object? sender, EventArgs e)
+    {
+        fondoAlternativo = !fondoAlternativo;
+
+        if (fondoAlternativo)
         {
-            count++;
-
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-            SemanticScreenReader.Announce(CounterBtn.Text);
+            BackgroundColor = Application.Current?.RequestedTheme == AppTheme.Dark
+                ? Color.FromArgb("#153448")
+                : Color.FromArgb("#D6EAF8");
+        }
+        else
+        {
+            ClearValue(BackgroundColorProperty);
         }
     }
 }

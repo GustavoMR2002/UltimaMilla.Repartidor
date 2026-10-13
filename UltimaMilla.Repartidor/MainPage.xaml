@@ -5,32 +5,42 @@
              Title="Última Milla · Repartidor">
 
     <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25">
-            <Image
-                Source="dotnet_bot.png"
-                HeightRequest="185"
-                Aspect="AspectFit"
-                SemanticProperties.Description="dot net bot in a submarine number ten" />
+        <VerticalStackLayout Padding="30,20"
+                             Spacing="25">
 
-            <Label
-                Text="¡Bienvenido, Gustavo!"
-                Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
+            <Image Source="dotnet_bot.png"
+                   HeightRequest="185"
+                   Aspect="AspectFit"
+                   SemanticProperties.Description="Robot de .NET en un submarino" />
 
-            <Label
-                Text="Ultima Milla: App de Entregas"
-                Style="{StaticResource SubHeadline}"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Ultima Milla: App de Entregas" />
+            <Label Text="¡Bienvenido, Gustavo!"
+                   Style="{StaticResource Headline}"
+                   SemanticProperties.HeadingLevel="Level1" />
 
-            <Button
-                x:Name="CounterBtn"
-                Text="Click me" 
-                SemanticProperties.Hint="Counts the number of times you click"
-                Clicked="OnCounterClicked"
-                HorizontalOptions="Fill" />
+            <Label Text="Última Milla: App de Entregas"
+                   Style="{StaticResource SubHeadline}"
+                   SemanticProperties.HeadingLevel="Level2" />
+
+            <Label x:Name="ContadorLabel"
+                   Text="Contador: 0"
+                   FontSize="24"
+                   HorizontalOptions="Center" />
+
+            <Button x:Name="CounterBtn"
+                    Text="Sumar 1"
+                    Clicked="OnCounterClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button x:Name="RestarBtn"
+                    Text="Restar 1"
+                    IsEnabled="False"
+                    Clicked="OnRestarClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button Text="Cambiar color de fondo"
+                    Clicked="OnCambiarFondoClicked"
+                    HorizontalOptions="Fill" />
+
         </VerticalStackLayout>
     </ScrollView>
 
