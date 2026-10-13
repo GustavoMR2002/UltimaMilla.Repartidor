@@ -2,7 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:UltimaMilla.Repartidor.Models"
+             xmlns:vm="clr-namespace:UltimaMilla.Repartidor.ViewModels"
              x:Class="UltimaMilla.Repartidor.JornadaPage"
+             x:DataType="vm:JornadaViewModel"
              Title="Mi jornada">
 
     <ContentPage.Resources>
@@ -21,27 +23,34 @@
           RowDefinitions="Auto,Auto,*,Auto"
           RowSpacing="12">
 
-        <!-- Encabezado -->
         <Grid Grid.Row="0"
               ColumnDefinitions="*,Auto"
               ColumnSpacing="10">
 
             <VerticalStackLayout Spacing="4">
                 <Label x:Name="SaludoLabel"
+                       Text="{Binding Saludo}"
                        Style="{StaticResource TituloJornada}" />
 
-                <Label x:Name="FechaLabel"
+                <Label Text="{Binding Fecha}"
                        Style="{StaticResource TextoSecundario}" />
             </VerticalStackLayout>
 
-            <Button x:Name="ActualizarBtn"
-                    Grid.Column="1"
-                    Text="Actualizar"
-                    VerticalOptions="Center"
-                    Clicked="OnActualizarClicked" />
+            <VerticalStackLayout Grid.Column="1"
+                                 Spacing="4"
+                                 VerticalOptions="Center">
+
+                <Button Text="Actualizar"
+                        Command="{Binding RefrescarCommand}" />
+
+                <ActivityIndicator
+                    IsRunning="{Binding EstaCargando}"
+                    IsVisible="{Binding EstaCargando}"
+                    HeightRequest="20"
+                    Color="{AppThemeBinding Light=#1565C0, Dark=#90CAF9}" />
+            </VerticalStackLayout>
         </Grid>
 
-        <!-- Tarjetas de resumen -->
         <Grid x:Name="ResumenGrid"
               Grid.Row="1"
               ColumnDefinitions="*,*"
@@ -53,6 +62,7 @@
                            Style="{StaticResource TextoSecundario}" />
 
                     <Label x:Name="TotalLabel"
+                           Text="{Binding TotalEntregas}"
                            Style="{StaticResource NumeroResumen}" />
                 </VerticalStackLayout>
             </Border>
@@ -63,19 +73,19 @@
                            Style="{StaticResource TextoSecundario}" />
 
                     <Label x:Name="CompletadasLabel"
+                           Text="{Binding EntregasCompletadas}"
                            Style="{StaticResource NumeroResumen}" />
                 </VerticalStackLayout>
             </Border>
         </Grid>
 
-        <!-- Lista con su propio desplazamiento -->
-        <CollectionView x:Name="ParadasView"
-                Grid.Row="2"
-                HorizontalOptions="Fill"
-                VerticalOptions="Fill"
-                ItemsLayout="VerticalList"
-                ItemSizingStrategy="MeasureAllItems"
-                SelectionMode="None">
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Paradas}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        ItemsLayout="VerticalList"
+                        ItemSizingStrategy="MeasureAllItems"
+                        SelectionMode="None">
 
             <CollectionView.EmptyView>
                 <Label Text="No tienes paradas hoy"
@@ -177,19 +187,32 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Controles de prueba -->
-        <Grid x:Name="PruebasPanel"
-              Grid.Row="3"
-              ColumnDefinitions="*,*"
-              ColumnSpacing="10">
+        <VerticalStackLayout Grid.Row="3" Spacing="4">
+            <Label Text="{Binding MensajeEstado}"
+                   Style="{StaticResource TextoSecundario}"
+                   HorizontalTextAlignment="Center">
 
-            <Button Text="Agregar prueba"
-                    Clicked="OnAgregarPruebaClicked" />
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label"
+                                 Binding="{Binding MensajeEstado}"
+                                 Value="">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
 
-            <Button Grid.Column="1"
-                    Text="Vaciar lista"
-                    Clicked="OnVaciarClicked" />
-        </Grid>
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10"
+                  IsEnabled="{Binding PuedeModificar}">
+
+                <Button Text="Agregar prueba"
+                        Command="{Binding AgregarPruebaCommand}" />
+
+                <Button Grid.Column="1"
+                        Text="Vaciar lista"
+                        Command="{Binding VaciarCommand}" />
+            </Grid>
+        </VerticalStackLayout>
 
     </Grid>
 </ContentPage>

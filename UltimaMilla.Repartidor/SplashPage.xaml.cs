@@ -1,30 +1,34 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace UltimaMilla.Repartidor;
 
 public partial class SplashPage : ContentPage
 {
-    private const int SplashDurationMs = 2000;
-    private bool _iniciado;
+    private readonly IServiceProvider servicios;
+    private bool iniciado;
 
-    public SplashPage()
+    public SplashPage(IServiceProvider servicios)
     {
         InitializeComponent();
+        this.servicios = servicios;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        if (_iniciado)
+        if (iniciado)
             return;
 
-        _iniciado = true;
+        iniciado = true;
 
-        await Task.Delay(SplashDurationMs);
+        await Task.Delay(2000);
 
-        if (Application.Current is not null &&
-            Application.Current.Windows.Count > 0)
+        var ventana = Window;
+
+        if (ventana is not null)
         {
-            Application.Current.Windows[0].Page = new AppShell();
+            ventana.Page = servicios.GetRequiredService<AppShell>();
         }
     }
 }
