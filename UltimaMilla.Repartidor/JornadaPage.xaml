@@ -1,41 +1,55 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:UltimaMilla.Repartidor.Models"
              x:Class="UltimaMilla.Repartidor.JornadaPage"
              Title="Mi jornada">
 
     <Grid Padding="20"
-          RowDefinitions="Auto,Auto,*"
+          RowDefinitions="Auto,Auto,*,Auto"
           RowSpacing="16">
 
-        <VerticalStackLayout Grid.Row="0" Spacing="4">
-            <Label x:Name="SaludoLabel"
-                   FontSize="24"
-                   FontAttributes="Bold" />
+        <!-- Saludo, fecha y actualización -->
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,Auto"
+              ColumnSpacing="10">
 
-            <Label x:Name="FechaLabel"
-                   FontSize="14"
-                   TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
-        </VerticalStackLayout>
+            <VerticalStackLayout Spacing="4">
+                <Label x:Name="SaludoLabel"
+                       FontSize="24"
+                       FontAttributes="Bold" />
 
+                <Label x:Name="FechaLabel"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+            </VerticalStackLayout>
+
+            <Button x:Name="ActualizarBtn"
+                    Grid.Column="1"
+                    Text="Actualizar"
+                    VerticalOptions="Center"
+                    Clicked="OnActualizarClicked" />
+        </Grid>
+
+        <!-- Resumen de la jornada -->
         <Grid Grid.Row="1"
-      ColumnDefinitions="*,*"
-      ColumnSpacing="12">
+              ColumnDefinitions="*,*"
+              ColumnSpacing="12">
 
             <Border Grid.Column="0"
-            Stroke="#1565C0"
-            StrokeThickness="1"
-            Padding="16"
-            StrokeShape="RoundRectangle 12">
+                    Stroke="#1565C0"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 12">
 
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Entregas de hoy"
-                   FontSize="14"
-                   TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
 
                     <Label x:Name="TotalLabel"
-                   FontSize="32"
-                   FontAttributes="Bold" />
+                           FontSize="32"
+                           FontAttributes="Bold" />
                 </VerticalStackLayout>
             </Border>
 
@@ -55,16 +69,111 @@
                            FontAttributes="Bold" />
                 </VerticalStackLayout>
             </Border>
-
         </Grid>
 
-        <Label Grid.Row="2"
-               VerticalOptions="Center"
-               HorizontalOptions="Center"
-               HorizontalTextAlignment="Center"
-               TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}"
-               Text="La lista de paradas llega en el próximo ejercicio." />
+        <!-- Lista de paradas -->
+        <CollectionView x:Name="ParadasView"
+                        Grid.Row="2"
+                        SelectionMode="None">
+
+            <CollectionView.EmptyView>
+                <Label Text="No tienes paradas hoy"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Parada">
+                    <Border Padding="14"
+                            Margin="0,4"
+                            Stroke="#999999"
+                            StrokeShape="RoundRectangle 10">
+
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Tapped="OnParadaTapped"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto"
+                              ColumnSpacing="12">
+
+                            <Border Grid.Column="0"
+                                    BackgroundColor="#1565C0"
+                                    StrokeThickness="0"
+                                    WidthRequest="34"
+                                    HeightRequest="34"
+                                    VerticalOptions="Center"
+                                    StrokeShape="RoundRectangle 17">
+
+                                <Label Text="{Binding Numero}"
+                                       TextColor="White"
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                            </Border>
+
+                            <VerticalStackLayout Grid.Column="1"
+                                                 Spacing="2">
+                                <Label Text="{Binding Cliente}"
+                                       FontAttributes="Bold"
+                                       FontSize="16" />
+
+                                <Label Text="{Binding Direccion}"
+                                       FontSize="13"
+                                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                            </VerticalStackLayout>
+
+                            <Label Grid.Column="2"
+                                   Text="{Binding Estado}"
+                                   FontSize="12"
+                                   VerticalOptions="Center">
+
+                                <Label.Style>
+                                    <Style TargetType="Label">
+                                        <Setter Property="TextColor"
+                                                Value="Gray" />
+
+                                        <Style.Triggers>
+                                            <DataTrigger TargetType="Label"
+                                                         Binding="{Binding Estado}"
+                                                         Value="Pendiente">
+                                                <Setter Property="TextColor"
+                                                        Value="{AppThemeBinding Light=#946200, Dark=#FFD166}" />
+                                            </DataTrigger>
+
+                                            <DataTrigger TargetType="Label"
+                                                         Binding="{Binding Estado}"
+                                                         Value="Entregada">
+                                                <Setter Property="TextColor"
+                                                        Value="{AppThemeBinding Light=#237A36, Dark=#81C784}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>
+
+                            </Label>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Controles para comprobar el comportamiento de la colección -->
+        <Grid x:Name="PruebasPanel"
+              Grid.Row="3"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="10">
+
+            <Button Text="Agregar prueba"
+                    Clicked="OnAgregarPruebaClicked" />
+
+            <Button Grid.Column="1"
+                    Text="Vaciar lista"
+                    Clicked="OnVaciarClicked" />
+        </Grid>
 
     </Grid>
-
 </ContentPage>
