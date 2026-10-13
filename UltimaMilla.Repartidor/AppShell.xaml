@@ -7,8 +7,8 @@
     Title="UltimaMilla.Repartidor">
 
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Mi jornada"
+        ContentTemplate="{DataTemplate local:JornadaPage}"
+        Route="JornadaPage" />
 
 </Shell>

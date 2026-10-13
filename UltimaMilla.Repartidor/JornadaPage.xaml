@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="UltimaMilla.Repartidor.JornadaPage"
+             Title="Mi jornada">
+
+    <Grid Padding="20"
+          RowDefinitions="Auto,Auto,*"
+          RowSpacing="16">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+            <Label x:Name="SaludoLabel"
+                   FontSize="24"
+                   FontAttributes="Bold" />
+
+            <Label x:Name="FechaLabel"
+                   FontSize="14"
+                   TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="1"
+      ColumnDefinitions="*,*"
+      ColumnSpacing="12">
+
+            <Border Grid.Column="0"
+            Stroke="#1565C0"
+            StrokeThickness="1"
+            Padding="16"
+            StrokeShape="RoundRectangle 12">
+
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Entregas de hoy"
+                   FontSize="14"
+                   TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+
+                    <Label x:Name="TotalLabel"
+                   FontSize="32"
+                   FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Stroke="#1565C0"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 12">
+
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Entregas completadas"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+
+                    <Label x:Name="CompletadasLabel"
+                           FontSize="32"
+                           FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+        </Grid>
+
+        <Label Grid.Row="2"
+               VerticalOptions="Center"
+               HorizontalOptions="Center"
+               HorizontalTextAlignment="Center"
+               TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}"
+               Text="La lista de paradas llega en el próximo ejercicio." />
+
+    </Grid>
+
+</ContentPage>
