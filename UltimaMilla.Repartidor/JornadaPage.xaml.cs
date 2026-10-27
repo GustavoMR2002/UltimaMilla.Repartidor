@@ -1,3 +1,4 @@
+using Microsoft.Maui.Dispatching;
 using System.Linq;
 using UltimaMilla.Repartidor.Models;
 using UltimaMilla.Repartidor.ViewModels;
@@ -9,17 +10,23 @@ public partial class JornadaPage : ContentPage
     private readonly JornadaViewModel viewModel;
     private bool? distribucionHorizontal;
     private bool navegando;
+    private readonly Microsoft.Maui.Dispatching.IDispatcherTimer reloj;
 
     public JornadaPage(JornadaViewModel viewModel)
     {
         InitializeComponent();
         this.viewModel = viewModel;
         BindingContext = viewModel;
+        reloj = Dispatcher.CreateTimer();
+        reloj.Interval = TimeSpan.FromMinutes(1);
+        reloj.IsRepeating = true;
+        reloj.Tick += (_, _) => viewModel.ActualizarTiempoTurno();
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        reloj.Start();
 
         var comando = viewModel.RefrescarCommand;
 
@@ -27,6 +34,12 @@ public partial class JornadaPage : ContentPage
             await tarea;
 
         await comando.ExecuteAsync(null);
+    }
+
+    protected override void OnDisappearing()
+    {
+        reloj.Stop();
+        base.OnDisappearing();
     }
 
     private async void OnParadaTapped(object? sender, TappedEventArgs e)

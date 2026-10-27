@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
 using UltimaMilla.Repartidor.Models;
@@ -10,6 +10,14 @@ namespace UltimaMilla.Repartidor.ViewModels;
 public partial class ParadaDetalleViewModel : ObservableObject
 {
     private readonly ParadasDatabase database;
+    private readonly TurnoDatabase turnos;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PuedeEditar))]
+    [NotifyCanExecuteChangedFor(nameof(MarcarEntregadaCommand))]
+    [NotifyCanExecuteChangedFor(nameof(MarcarFallidaCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ReintentarEntregaCommand))]
+    public partial bool TieneTurnoAbierto { get; set; }
 
     [ObservableProperty]
     public partial int ParadaId { get; set; }
@@ -41,13 +49,14 @@ public partial class ParadaDetalleViewModel : ObservableObject
     public bool EsFallida => Parada?.Estado == "Fallida";
 
     public bool PuedeEditar =>
-        !EstaOcupado &&
+        !EstaOcupado && TieneTurnoAbierto &&
         Parada is not null &&
         !EsEntregada;
 
-    public ParadaDetalleViewModel(ParadasDatabase database)
+    public ParadaDetalleViewModel(ParadasDatabase database, TurnoDatabase turnos)
     {
         this.database = database;
+        this.turnos = turnos;
         RazonFallo = "";
         MensajeEstado = "";
     }
@@ -64,11 +73,14 @@ public partial class ParadaDetalleViewModel : ObservableObject
 
         try
         {
+            TieneTurnoAbierto = await turnos.GetTurnoAbiertoAsync() is not null;
             Parada = await database.GetParadaAsync(id);
             RazonFallo = Parada?.RazonFallo ?? "";
 
             if (Parada is null)
                 MensajeEstado = "No se encontró esta parada.";
+            else if (!TieneTurnoAbierto && !EsEntregada)
+                MensajeEstado = "Inicia un turno en Mi jornada para modificar esta parada.";
         }
         catch (Exception ex)
         {

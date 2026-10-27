@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UltimaMilla.Repartidor.Services;
 using UltimaMilla.Repartidor.ViewModels;
@@ -21,6 +21,12 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<SesionActual>();
         builder.Services.AddSingleton<ParadasDatabase>();
+        builder.Services.AddSingleton<RepartidorDatabase>();
+        builder.Services.AddSingleton<TurnoDatabase>();
+        builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<HistoricoViewModel>();
+        builder.Services.AddTransient<HistoricoPage>();
 
         builder.Services.AddTransient<JornadaViewModel>();
         builder.Services.AddTransient<JornadaPage>();

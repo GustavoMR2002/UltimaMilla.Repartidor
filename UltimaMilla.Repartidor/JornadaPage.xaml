@@ -7,6 +7,10 @@
              x:DataType="vm:JornadaViewModel"
              Title="Mi jornada">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Cerrar sesión" Command="{Binding CerrarSesionCommand}" />
+    </ContentPage.ToolbarItems>
+
     <ContentPage.Resources>
         <Style TargetType="Border">
             <Setter Property="Stroke" Value="#1565C0" />
@@ -19,7 +23,7 @@
 
     <Grid x:Name="PaginaGrid"
           Padding="20"
-          RowDefinitions="Auto,Auto,Auto,*,Auto"
+          RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
           RowSpacing="12">
 
         <Grid Grid.Row="0"
@@ -78,7 +82,14 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Label Text="{Binding TiempoTurno}" VerticalOptions="Center"
+                   Style="{StaticResource TextoSecundario}" />
+            <Button Grid.Column="1" Text="{Binding TextoBotonTurno}"
+                    Command="{Binding AlternarTurnoCommand}" />
+        </Grid>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
             <Label Text="Ocultar entregadas"
                    VerticalOptions="Center"
                    Style="{StaticResource TextoSecundario}" />
@@ -87,7 +98,7 @@
                     IsToggled="{Binding OcultarEntregadas, Mode=TwoWay}" />
         </Grid>
 
-        <CollectionView Grid.Row="3"
+        <CollectionView Grid.Row="4"
                         ItemsSource="{Binding Paradas}"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill"
@@ -188,7 +199,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Label Grid.Row="4"
+        <Label Grid.Row="5"
                Text="{Binding MensajeEstado}"
                Style="{StaticResource TextoSecundario}">
             <Label.Triggers>

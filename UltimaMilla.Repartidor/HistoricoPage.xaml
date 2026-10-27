@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:UltimaMilla.Repartidor.ViewModels"
+             xmlns:models="clr-namespace:UltimaMilla.Repartidor.Models"
+             x:Class="UltimaMilla.Repartidor.HistoricoPage"
+             x:DataType="vm:HistoricoViewModel" Title="Histórico">
+    <Grid Padding="20" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16">
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Border Padding="12" StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout>
+                    <Label Text="{Binding EntregasEstaSemana}" Style="{StaticResource NumeroResumen}" />
+                    <Label Text="Últimos 7 días" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="1" Padding="12" StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout>
+                    <Label Text="{Binding EntregasEsteMes}" Style="{StaticResource NumeroResumen}" />
+                    <Label Text="Este mes" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <Label Grid.Row="1" Text="{Binding MensajeEstado}" />
+        <Label Grid.Row="2" Text="Entregas de este mes" FontAttributes="Bold" />
+        <CollectionView Grid.Row="3" ItemsSource="{Binding EntregasDelMes}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <Label Text="Aún no hay entregas este mes." />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Parada">
+                    <VerticalStackLayout Padding="0,8" Spacing="4">
+                        <Label Text="{Binding Cliente}" Style="{StaticResource ClienteLabel}" />
+                        <Label Text="{Binding ModificadoEn, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
+                               Style="{StaticResource TextoSecundario}" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <ActivityIndicator Grid.RowSpan="4" IsRunning="{Binding EstaCargando}"
+                           IsVisible="{Binding EstaCargando}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

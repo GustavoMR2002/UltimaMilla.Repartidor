@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:UltimaMilla.Repartidor.ViewModels"
+             xmlns:models="clr-namespace:UltimaMilla.Repartidor.Models"
+             x:Class="UltimaMilla.Repartidor.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Title="Selecciona tu perfil">
+    <Grid Padding="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
+        <Label Text="¿Quién va a repartir?" Style="{StaticResource TituloJornada}" />
+        <Label Grid.Row="1" Text="Selecciona tu nombre para continuar."
+               Style="{StaticResource TextoSecundario}" />
+        <CollectionView x:Name="Perfiles" Grid.Row="2"
+                        ItemsSource="{Binding Repartidores}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnRepartidorSeleccionado">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Repartidor">
+                    <Border Padding="16" Margin="0,4" StrokeShape="RoundRectangle 12">
+                        <Label Text="{Binding Nombre}" FontSize="18" />
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Label Grid.Row="3" Text="{Binding MensajeEstado}" />
+        <ActivityIndicator Grid.Row="2" IsRunning="{Binding EstaCargando}"
+                           IsVisible="{Binding EstaCargando}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

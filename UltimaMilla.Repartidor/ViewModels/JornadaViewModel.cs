@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,6 +11,19 @@ namespace UltimaMilla.Repartidor.ViewModels;
 public partial class JornadaViewModel : ObservableObject
 {
     private readonly ParadasDatabase database;
+    private readonly RepartidorDatabase repartidores;
+    private readonly SesionActual sesion;
+    private readonly TurnoDatabase turnos;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TextoBotonTurno))]
+    public partial Turno? TurnoActivo { get; set; }
+
+    [ObservableProperty]
+    public partial string TiempoTurno { get; set; }
+
+    public string TextoBotonTurno =>
+        TurnoActivo is null ? "Iniciar turno" : "Terminar turno";
     private List<Parada> todasLasParadas = new();
 
     [ObservableProperty]
@@ -26,6 +39,8 @@ public partial class JornadaViewModel : ObservableObject
     public partial int EntregasCompletadas { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AlternarTurnoCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CerrarSesionCommand))]
     public partial bool EstaCargando { get; set; }
 
     [ObservableProperty]
@@ -39,16 +54,20 @@ public partial class JornadaViewModel : ObservableObject
 
     public ObservableCollection<Parada> Paradas { get; } = new();
 
-    public JornadaViewModel(ParadasDatabase database)
+    public JornadaViewModel(ParadasDatabase database,
+        RepartidorDatabase repartidores, SesionActual sesion, TurnoDatabase turnos)
     {
         this.database = database;
+        this.repartidores = repartidores;
+        this.sesion = sesion;
+        this.turnos = turnos;
+        TiempoTurno = "Sin turno abierto";
 
         Saludo = "";
         Fecha = "";
         MensajeEstado = "";
         MensajeListaVacia = "No tienes paradas hoy";
 
-        ActualizarEncabezado();
     }
 
     partial void OnOcultarEntregadasChanged(bool value)
@@ -56,7 +75,7 @@ public partial class JornadaViewModel : ObservableObject
         AplicarFiltro();
     }
 
-    private void ActualizarEncabezado()
+    private void ActualizarEncabezado(string nombre)
     {
         DateTime ahora = DateTime.Now;
         var cultura = CultureInfo.GetCultureInfo("es-MX");
@@ -67,7 +86,7 @@ public partial class JornadaViewModel : ObservableObject
                 ? "Buenas tardes"
                 : "Buenas noches";
 
-        Saludo = $"{saludo}, Gustavo";
+        Saludo = $"{saludo}, {nombre}";
 
         string fecha = ahora.ToString("dddd d 'de' MMMM", cultura);
         Fecha = char.ToUpper(fecha[0], cultura) + fecha.Substring(1);
@@ -84,6 +103,32 @@ public partial class JornadaViewModel : ObservableObject
 
         try
         {
+            Paradas.Clear();
+            todasLasParadas.Clear();
+            TotalEntregas = 0;
+            EntregasCompletadas = 0;
+            TurnoActivo = null;
+            ActualizarTiempoTurno();
+
+            if (sesion.RepartidorId == 0)
+            {
+                await Shell.Current.GoToAsync("//LoginPage");
+                return;
+            }
+
+            var repartidor = await repartidores.GetRepartidorAsync(sesion.RepartidorId);
+            if (repartidor is null)
+            {
+                Preferences.Default.Remove("RepartidorActualId");
+                sesion.RepartidorId = 0;
+                await Shell.Current.GoToAsync("//LoginPage");
+                return;
+            }
+
+            ActualizarEncabezado(repartidor.Nombre);
+            TurnoActivo = await turnos.GetTurnoAbiertoAsync();
+            ActualizarTiempoTurno();
+
             var resultado = await database.GetParadasAsync();
 
 #if DEBUG
@@ -100,7 +145,7 @@ public partial class JornadaViewModel : ObservableObject
                 resultado.Count(p => p.Estado == "Entregada");
 
             AplicarFiltro();
-            ActualizarEncabezado();
+
         }
         catch (Exception ex)
         {
@@ -110,6 +155,78 @@ public partial class JornadaViewModel : ObservableObject
         {
             EstaCargando = false;
         }
+    }
+
+    private bool PuedeCambiarTurno() => !EstaCargando;
+
+    [RelayCommand(CanExecute = nameof(PuedeCambiarTurno))]
+    private async Task AlternarTurnoAsync()
+    {
+        if (EstaCargando)
+            return;
+
+        EstaCargando = true;
+        MensajeEstado = "";
+        try
+        {
+            if (TurnoActivo is null)
+                await turnos.IniciarTurnoAsync();
+            else
+                await turnos.CerrarTurnoAsync(TurnoActivo);
+
+            TurnoActivo = await turnos.GetTurnoAbiertoAsync();
+            ActualizarTiempoTurno();
+        }
+        catch (Exception ex)
+        {
+            MensajeEstado = $"No se pudo actualizar el turno: {ex.Message}";
+        }
+        finally
+        {
+            EstaCargando = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(PuedeCambiarTurno))]
+    private async Task CerrarSesionAsync()
+    {
+        if (EstaCargando)
+            return;
+
+        EstaCargando = true;
+        try
+        {
+            sesion.RepartidorId = 0;
+            TurnoActivo = null;
+            ActualizarTiempoTurno();
+            Paradas.Clear();
+            todasLasParadas.Clear();
+            TotalEntregas = 0;
+            EntregasCompletadas = 0;
+            Saludo = "";
+            await Shell.Current.GoToAsync("//LoginPage");
+        }
+        catch (Exception ex)
+        {
+            MensajeEstado = $"No se pudo cerrar sesión: {ex.Message}";
+        }
+        finally
+        {
+            EstaCargando = false;
+        }
+    }
+
+    public void ActualizarTiempoTurno()
+    {
+        if (TurnoActivo is null)
+        {
+            TiempoTurno = "Sin turno abierto";
+            return;
+        }
+
+        var transcurrido = DateTime.Now - TurnoActivo.FechaInicio;
+        int minutos = Math.Max(0, (int)transcurrido.TotalMinutes);
+        TiempoTurno = $"Turno: {minutos / 60} h {minutos % 60:00} min";
     }
 
     private void AplicarFiltro()
