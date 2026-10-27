@@ -6,32 +6,58 @@ namespace UltimaMilla.Repartidor;
 
 public partial class JornadaPage : ContentPage
 {
+    private readonly JornadaViewModel viewModel;
     private bool? distribucionHorizontal;
+    private bool navegando;
 
     public JornadaPage(JornadaViewModel viewModel)
     {
         InitializeComponent();
+        this.viewModel = viewModel;
         BindingContext = viewModel;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        var comando = viewModel.RefrescarCommand;
+
+        if (comando.IsRunning && comando.ExecutionTask is Task tarea)
+            await tarea;
+
+        await comando.ExecuteAsync(null);
     }
 
     private async void OnParadaTapped(object? sender, TappedEventArgs e)
     {
-        if (e.Parameter is not Parada parada)
+        if (navegando || viewModel.EstaCargando ||
+            e.Parameter is not Parada parada)
             return;
 
-        if (sender is Border fila)
-        {
-            VisualStateManager.GoToState(fila, "Pressed");
-            await Task.Delay(180);
-            VisualStateManager.GoToState(fila, "Normal");
-        }
+        navegando = true;
 
-        await DisplayAlertAsync(
-            "Detalle de la parada",
-            $"Cliente: {parada.Cliente}\n" +
-            $"Dirección: {parada.Direccion}\n" +
-            $"Estado: {parada.Estado}",
-            "Aceptar");
+        try
+        {
+            if (sender is Border fila)
+            {
+                VisualStateManager.GoToState(fila, "Pressed");
+                await Task.Delay(150);
+                VisualStateManager.GoToState(fila, "Normal");
+            }
+
+            await Shell.Current.GoToAsync(
+                $"{nameof(ParadaDetallePage)}?ParadaId={parada.Id}");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(
+                "No se pudo abrir el detalle", ex.Message, "Aceptar");
+        }
+        finally
+        {
+            navegando = false;
+        }
     }
 
     protected override void OnSizeAllocated(double width, double height)

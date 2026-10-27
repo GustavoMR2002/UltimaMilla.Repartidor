@@ -11,8 +11,7 @@
         <Style TargetType="Border">
             <Setter Property="Stroke" Value="#1565C0" />
             <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="StrokeShape"
-                    Value="RoundRectangle 12" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
             <Setter Property="BackgroundColor"
                     Value="{AppThemeBinding Light=#F5F8FC, Dark=#202B38}" />
         </Style>
@@ -20,7 +19,7 @@
 
     <Grid x:Name="PaginaGrid"
           Padding="20"
-          RowDefinitions="Auto,Auto,*,Auto"
+          RowDefinitions="Auto,Auto,Auto,*,Auto"
           RowSpacing="12">
 
         <Grid Grid.Row="0"
@@ -79,7 +78,16 @@
             </Border>
         </Grid>
 
-        <CollectionView Grid.Row="2"
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+            <Label Text="Ocultar entregadas"
+                   VerticalOptions="Center"
+                   Style="{StaticResource TextoSecundario}" />
+
+            <Switch Grid.Column="1"
+                    IsToggled="{Binding OcultarEntregadas, Mode=TwoWay}" />
+        </Grid>
+
+        <CollectionView Grid.Row="3"
                         ItemsSource="{Binding Paradas}"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill"
@@ -88,7 +96,7 @@
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
-                <Label Text="No tienes paradas hoy"
+                <Label Text="{Binding MensajeListaVacia}"
                        Style="{StaticResource TextoSecundario}"
                        HorizontalOptions="Center"
                        VerticalOptions="Center"
@@ -103,15 +111,12 @@
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal">
                                     <VisualState.Setters>
-                                        <Setter Property="Opacity"
-                                                Value="1" />
+                                        <Setter Property="Opacity" Value="1" />
                                     </VisualState.Setters>
                                 </VisualState>
-
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Property="Opacity"
-                                                Value="0.55" />
+                                        <Setter Property="Opacity" Value="0.55" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -123,9 +128,7 @@
                                 CommandParameter="{Binding .}" />
                         </Border.GestureRecognizers>
 
-                        <Grid ColumnDefinitions="Auto,*"
-                              ColumnSpacing="12">
-
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <Border BackgroundColor="#1565C0"
                                     StrokeThickness="0"
                                     WidthRequest="34"
@@ -140,9 +143,7 @@
                                        VerticalOptions="Center" />
                             </Border>
 
-                            <VerticalStackLayout Grid.Column="1"
-                                                 Spacing="3">
-
+                            <VerticalStackLayout Grid.Column="1" Spacing="3">
                                 <Label Text="{Binding Cliente}"
                                        Style="{StaticResource ClienteLabel}" />
 
@@ -152,34 +153,34 @@
                                 <Label Text="{Binding Estado}">
                                     <Label.Style>
                                         <Style TargetType="Label">
-                                            <Setter Property="FontSize"
-                                                    Value="12" />
-                                            <Setter Property="TextColor"
-                                                    Value="Gray" />
+                                            <Setter Property="FontSize" Value="12" />
+                                            <Setter Property="TextColor" Value="Gray" />
 
                                             <Style.Triggers>
-                                                <DataTrigger
-                                                    TargetType="Label"
-                                                    Binding="{Binding Estado}"
-                                                    Value="Pendiente">
-                                                    <Setter
-                                                        Property="TextColor"
-                                                        Value="{AppThemeBinding Light=#946200, Dark=#FFD166}" />
+                                                <DataTrigger TargetType="Label"
+                                                             Binding="{Binding Estado}"
+                                                             Value="Pendiente">
+                                                    <Setter Property="TextColor"
+                                                            Value="{AppThemeBinding Light=#946200, Dark=#FFD166}" />
                                                 </DataTrigger>
 
-                                                <DataTrigger
-                                                    TargetType="Label"
-                                                    Binding="{Binding Estado}"
-                                                    Value="Entregada">
-                                                    <Setter
-                                                        Property="TextColor"
-                                                        Value="{AppThemeBinding Light=#237A36, Dark=#81C784}" />
+                                                <DataTrigger TargetType="Label"
+                                                             Binding="{Binding Estado}"
+                                                             Value="Entregada">
+                                                    <Setter Property="TextColor"
+                                                            Value="{AppThemeBinding Light=#237A36, Dark=#81C784}" />
+                                                </DataTrigger>
+
+                                                <DataTrigger TargetType="Label"
+                                                             Binding="{Binding Estado}"
+                                                             Value="Fallida">
+                                                    <Setter Property="TextColor"
+                                                            Value="{AppThemeBinding Light=#B3261E, Dark=#FFB4AB}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Label.Style>
                                 </Label>
-
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -187,32 +188,17 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <VerticalStackLayout Grid.Row="3" Spacing="4">
-            <Label Text="{Binding MensajeEstado}"
-                   Style="{StaticResource TextoSecundario}"
-                   HorizontalTextAlignment="Center">
-
-                <Label.Triggers>
-                    <DataTrigger TargetType="Label"
-                                 Binding="{Binding MensajeEstado}"
-                                 Value="">
-                        <Setter Property="IsVisible" Value="False" />
-                    </DataTrigger>
-                </Label.Triggers>
-            </Label>
-
-            <Grid ColumnDefinitions="*,*"
-                  ColumnSpacing="10"
-                  IsEnabled="{Binding PuedeModificar}">
-
-                <Button Text="Agregar prueba"
-                        Command="{Binding AgregarPruebaCommand}" />
-
-                <Button Grid.Column="1"
-                        Text="Vaciar lista"
-                        Command="{Binding VaciarCommand}" />
-            </Grid>
-        </VerticalStackLayout>
+        <Label Grid.Row="4"
+               Text="{Binding MensajeEstado}"
+               Style="{StaticResource TextoSecundario}">
+            <Label.Triggers>
+                <DataTrigger TargetType="Label"
+                             Binding="{Binding MensajeEstado}"
+                             Value="">
+                    <Setter Property="IsVisible" Value="False" />
+                </DataTrigger>
+            </Label.Triggers>
+        </Label>
 
     </Grid>
 </ContentPage>

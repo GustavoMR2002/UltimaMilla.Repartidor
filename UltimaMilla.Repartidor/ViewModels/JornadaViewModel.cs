@@ -4,11 +4,15 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using UltimaMilla.Repartidor.Models;
+using UltimaMilla.Repartidor.Services;
 
 namespace UltimaMilla.Repartidor.ViewModels;
 
 public partial class JornadaViewModel : ObservableObject
 {
+    private readonly ParadasDatabase database;
+    private List<Parada> todasLasParadas = new();
+
     [ObservableProperty]
     public partial string Saludo { get; set; }
 
@@ -22,26 +26,34 @@ public partial class JornadaViewModel : ObservableObject
     public partial int EntregasCompletadas { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PuedeModificar))]
     public partial bool EstaCargando { get; set; }
+
+    [ObservableProperty]
+    public partial bool OcultarEntregadas { get; set; }
 
     [ObservableProperty]
     public partial string MensajeEstado { get; set; }
 
-    public bool PuedeModificar => !EstaCargando;
+    [ObservableProperty]
+    public partial string MensajeListaVacia { get; set; }
 
     public ObservableCollection<Parada> Paradas { get; } = new();
 
-    public JornadaViewModel()
+    public JornadaViewModel(ParadasDatabase database)
     {
+        this.database = database;
+
         Saludo = "";
         Fecha = "";
         MensajeEstado = "";
-
-        Paradas.CollectionChanged += (_, _) => ActualizarResumen();
+        MensajeListaVacia = "No tienes paradas hoy";
 
         ActualizarEncabezado();
-        CargarParadas();
+    }
+
+    partial void OnOcultarEntregadasChanged(bool value)
+    {
+        AplicarFiltro();
     }
 
     private void ActualizarEncabezado()
@@ -49,130 +61,114 @@ public partial class JornadaViewModel : ObservableObject
         DateTime ahora = DateTime.Now;
         var cultura = CultureInfo.GetCultureInfo("es-MX");
 
-        string saludo;
-
-        if (ahora.Hour < 12)
-        {
-            saludo = "Buenos días";
-        }
-        else if (ahora.Hour < 20)
-        {
-            saludo = "Buenas tardes";
-        }
-        else
-        {
-            saludo = "Buenas noches";
-        }
+        string saludo = ahora.Hour < 12
+            ? "Buenos días"
+            : ahora.Hour < 20
+                ? "Buenas tardes"
+                : "Buenas noches";
 
         Saludo = $"{saludo}, Gustavo";
 
-        string fecha = ahora.ToString(
-            "dddd d 'de' MMMM", cultura);
-
+        string fecha = ahora.ToString("dddd d 'de' MMMM", cultura);
         Fecha = char.ToUpper(fecha[0], cultura) + fecha.Substring(1);
-    }
-
-    private void CargarParadas()
-    {
-        Paradas.Clear();
-
-        Paradas.Add(new Parada
-        {
-            Numero = 1,
-            Cliente = "Abarrotes El Mezquite",
-            Direccion = "Calle Nogal 120, Saltillo",
-            Estado = "Pendiente"
-        });
-
-        Paradas.Add(new Parada
-        {
-            Numero = 2,
-            Cliente = "Papelería Los Pinos",
-            Direccion = "Calle Pino 245, Saltillo",
-            Estado = "Entregada"
-        });
-
-        Paradas.Add(new Parada
-        {
-            Numero = 3,
-            Cliente = "Farmacia Santa Elena",
-            Direccion = "Av. del Valle 380, Saltillo",
-            Estado = "Pendiente"
-        });
-
-        Paradas.Add(new Parada
-        {
-            Numero = 4,
-            Cliente = "Panadería La Espiga",
-            Direccion = "Calle Trigo 56, Saltillo",
-            Estado = "Entregada"
-        });
-
-        Paradas.Add(new Parada
-        {
-            Numero = 5,
-            Cliente = "Taller El Roble",
-            Direccion = "Calle Roble 710, Saltillo",
-            Estado = "Pendiente"
-        });
-    }
-
-    private void ActualizarResumen()
-    {
-        TotalEntregas = Paradas.Count;
-        EntregasCompletadas =
-            Paradas.Count(p => p.Estado == "Entregada");
     }
 
     [RelayCommand]
     private async Task RefrescarAsync()
     {
-        MensajeEstado = "";
+        if (EstaCargando)
+            return;
+
         EstaCargando = true;
+        MensajeEstado = "";
 
         try
         {
-            await Task.Delay(1000);
+            var resultado = await database.GetParadasAsync();
 
-            CargarParadas();
+#if DEBUG
+            if (resultado.Count == 0)
+            {
+                await SembrarParadasAsync();
+                resultado = await database.GetParadasAsync();
+            }
+#endif
+
+            todasLasParadas = resultado;
+            TotalEntregas = resultado.Count;
+            EntregasCompletadas =
+                resultado.Count(p => p.Estado == "Entregada");
+
+            AplicarFiltro();
             ActualizarEncabezado();
-
-            MensajeEstado = "Datos actualizados correctamente";
+        }
+        catch (Exception ex)
+        {
+            MensajeEstado = $"No se pudieron cargar las paradas: {ex.Message}";
         }
         finally
         {
             EstaCargando = false;
         }
-
-        await Task.Delay(2500);
-        MensajeEstado = "";
     }
 
-    [RelayCommand]
-    private void AgregarPrueba()
+    private void AplicarFiltro()
     {
-        if (EstaCargando)
-            return;
-
-        int numero = Paradas.Count == 0
-            ? 1
-            : Paradas.Max(p => p.Numero) + 1;
-
-        Paradas.Add(new Parada
-        {
-            Numero = numero,
-            Cliente = $"Cliente de prueba {numero}",
-            Direccion = "Dirección de prueba, Saltillo",
-            Estado = "Pendiente"
-        });
-    }
-
-    [RelayCommand]
-    private void Vaciar()
-    {
-        if (EstaCargando)
-            return;
-
         Paradas.Clear();
+
+        foreach (var parada in todasLasParadas)
+        {
+            if (!OcultarEntregadas || parada.Estado != "Entregada")
+                Paradas.Add(parada);
+        }
+
+        MensajeListaVacia = OcultarEntregadas
+            ? "No hay paradas pendientes ni fallidas"
+            : "No tienes paradas hoy";
+    }
+
+    private async Task SembrarParadasAsync()
+    {
+        var asignadas = new List<Parada>
+        {
+            new()
+            {
+                Numero = 1,
+                Cliente = "Abarrotes El Mezquite",
+                Direccion = "Calle Nogal 120, Saltillo",
+                Estado = "Pendiente"
+            },
+            new()
+            {
+                Numero = 2,
+                Cliente = "Papelería Los Pinos",
+                Direccion = "Calle Pino 245, Saltillo",
+                Estado = "Entregada"
+            },
+            new()
+            {
+                Numero = 3,
+                Cliente = "Farmacia Santa Elena",
+                Direccion = "Av. del Valle 380, Saltillo",
+                Estado = "Pendiente"
+            },
+            new()
+            {
+                Numero = 4,
+                Cliente = "Panadería La Espiga",
+                Direccion = "Calle Trigo 56, Saltillo",
+                Estado = "Entregada"
+            },
+            new()
+            {
+                Numero = 5,
+                Cliente = "Taller El Roble",
+                Direccion = "Calle Roble 710, Saltillo",
+                Estado = "Pendiente"
+            }
+        };
+
+        foreach (var parada in asignadas)
+            await database.SaveParadaAsync(parada);
     }
 }

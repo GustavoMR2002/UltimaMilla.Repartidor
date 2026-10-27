@@ -1,10 +1,13 @@
-﻿namespace UltimaMilla.Repartidor
+﻿namespace UltimaMilla.Repartidor;
+
+public partial class AppShell : Shell
 {
-    public partial class AppShell : Shell
+    public AppShell()
     {
-        public AppShell()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+
+        Routing.RegisterRoute(
+            nameof(ParadaDetallePage),
+            typeof(ParadaDetallePage));
     }
 }

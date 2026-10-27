@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:UltimaMilla.Repartidor.ViewModels"
+             x:Class="UltimaMilla.Repartidor.ParadaDetallePage"
+             x:DataType="vm:ParadaDetalleViewModel"
+             Title="Detalle de la parada">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+
+            <Label Text="{Binding Parada.Numero, StringFormat='Parada {0}'}"
+                   Style="{StaticResource TextoSecundario}" />
+
+            <Label Text="{Binding Parada.Cliente}"
+                   FontSize="24"
+                   FontAttributes="Bold" />
+
+            <Label Text="{Binding Parada.Direccion}"
+                   Style="{StaticResource TextoSecundario}" />
+
+            <Label Text="{Binding Parada.Estado}"
+                   FontSize="18"
+                   FontAttributes="Bold" />
+
+            <Label Text="{Binding Parada.ModificadoEn,
+                          StringFormat='Último cambio: {0:dd/MM/yyyy HH:mm:ss}'}"
+                   Style="{StaticResource TextoSecundario}" />
+
+            <BoxView HeightRequest="1"
+                     Color="{AppThemeBinding Light=#CCCCCC, Dark=#555555}" />
+
+            <Label Text="Entrega completada. Este detalle es de solo lectura."
+                   IsVisible="{Binding EsEntregada}"
+                   TextColor="{AppThemeBinding Light=#237A36, Dark=#81C784}" />
+
+            <VerticalStackLayout Spacing="6">
+                <VerticalStackLayout.Triggers>
+                    <DataTrigger TargetType="VerticalStackLayout"
+                                 Binding="{Binding EsEntregada}"
+                                 Value="True">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </VerticalStackLayout.Triggers>
+
+                <Label Text="Razón del fallo"
+                       Style="{StaticResource TextoSecundario}" />
+
+                <Entry Text="{Binding RazonFallo, Mode=TwoWay}"
+                       Placeholder="Ejemplo: el cliente no se encontraba"
+                       IsEnabled="{Binding PuedeEditar}" />
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding EstaOcupado}"
+                               IsVisible="{Binding EstaOcupado}"
+                               Color="{AppThemeBinding Light=#1565C0, Dark=#90CAF9}" />
+
+            <Label Text="Procesando..."
+                   IsVisible="{Binding EstaOcupado}"
+                   HorizontalTextAlignment="Center"
+                   Style="{StaticResource TextoSecundario}" />
+
+            <Label Text="{Binding MensajeEstado}"
+                   TextColor="{AppThemeBinding Light=#B3261E, Dark=#FFB4AB}">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label"
+                                 Binding="{Binding MensajeEstado}"
+                                 Value="">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+
+            <Button Text="Marcar entregada"
+                    Command="{Binding MarcarEntregadaCommand}" />
+
+            <Button Text="Marcar fallida"
+                    Command="{Binding MarcarFallidaCommand}" />
+
+            <Button Text="Reintentar entrega"
+                    IsVisible="{Binding EsFallida}"
+                    Command="{Binding ReintentarEntregaCommand}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
