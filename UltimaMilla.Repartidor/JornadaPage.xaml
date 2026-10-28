@@ -161,6 +161,10 @@
                                 <Label Text="{Binding Direccion}"
                                        Style="{StaticResource TextoSecundario}" />
 
+                                <Label Text="{Binding DistanciaTexto}"
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+
                                 <Label Text="{Binding Estado}">
                                     <Label.Style>
                                         <Style TargetType="Label">

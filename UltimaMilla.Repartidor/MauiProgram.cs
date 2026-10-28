@@ -23,6 +23,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ParadasDatabase>();
         builder.Services.AddSingleton<RepartidorDatabase>();
         builder.Services.AddSingleton<TurnoDatabase>();
+        builder.Services.AddSingleton<UbicacionService>();
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<HistoricoViewModel>();

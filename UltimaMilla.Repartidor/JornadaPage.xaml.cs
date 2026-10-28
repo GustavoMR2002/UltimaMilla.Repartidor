@@ -10,6 +10,9 @@ public partial class JornadaPage : ContentPage
     private readonly JornadaViewModel viewModel;
     private bool? distribucionHorizontal;
     private bool navegando;
+    private bool visible;
+    private Window? ventana;
+    private readonly IDispatcherTimer ubicacionTimer;
     private readonly Microsoft.Maui.Dispatching.IDispatcherTimer reloj;
 
     public JornadaPage(JornadaViewModel viewModel)
@@ -21,24 +24,77 @@ public partial class JornadaPage : ContentPage
         reloj.Interval = TimeSpan.FromMinutes(1);
         reloj.IsRepeating = true;
         reloj.Tick += (_, _) => viewModel.ActualizarTiempoTurno();
+        ubicacionTimer = Dispatcher.CreateTimer();
+        ubicacionTimer.Interval = TimeSpan.FromSeconds(30);
+        ubicacionTimer.IsRepeating = true;
+        ubicacionTimer.Tick += ActualizarUbicacion;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        reloj.Start();
+        visible = true;
+        ventana = Window;
+        if (ventana is not null)
+        {
+            ventana.Stopped += OnVentanaDetenida;
+            ventana.Resumed += OnVentanaReanudada;
+        }
+        await IniciarActualizacionAsync();
+    }
 
+    private async Task IniciarActualizacionAsync()
+    {
         var comando = viewModel.RefrescarCommand;
-
         if (comando.IsRunning && comando.ExecutionTask is Task tarea)
             await tarea;
 
+        if (!visible)
+            return;
+
+        viewModel.IniciarSeguimiento();
+        reloj.Start();
         await comando.ExecuteAsync(null);
+
+        if (visible)
+            ubicacionTimer.Start();
+    }
+
+    private async void ActualizarUbicacion(object? sender, EventArgs e)
+    {
+        if (visible && !navegando && !viewModel.EstaCargando &&
+            !viewModel.RefrescarCommand.IsRunning)
+            await viewModel.RefrescarCommand.ExecuteAsync(null);
+    }
+
+    private void DetenerActualizacion()
+    {
+        visible = false;
+        reloj.Stop();
+        ubicacionTimer.Stop();
+        viewModel.DetenerSeguimiento();
+    }
+
+    private void OnVentanaDetenida(object? sender, EventArgs e)
+    {
+        DetenerActualizacion();
+    }
+
+    private async void OnVentanaReanudada(object? sender, EventArgs e)
+    {
+        visible = true;
+        await IniciarActualizacionAsync();
     }
 
     protected override void OnDisappearing()
     {
-        reloj.Stop();
+        DetenerActualizacion();
+        if (ventana is not null)
+        {
+            ventana.Stopped -= OnVentanaDetenida;
+            ventana.Resumed -= OnVentanaReanudada;
+            ventana = null;
+        }
         base.OnDisappearing();
     }
 

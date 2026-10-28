@@ -4,6 +4,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using UltimaMilla.Repartidor.Models;
+using UltimaMilla.Repartidor.Helpers;
 using UltimaMilla.Repartidor.Services;
 
 namespace UltimaMilla.Repartidor.ViewModels;
@@ -14,6 +15,8 @@ public partial class JornadaViewModel : ObservableObject
     private readonly RepartidorDatabase repartidores;
     private readonly SesionActual sesion;
     private readonly TurnoDatabase turnos;
+    private readonly UbicacionService ubicacion;
+    private CancellationTokenSource? seguimiento;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TextoBotonTurno))]
@@ -55,12 +58,14 @@ public partial class JornadaViewModel : ObservableObject
     public ObservableCollection<Parada> Paradas { get; } = new();
 
     public JornadaViewModel(ParadasDatabase database,
-        RepartidorDatabase repartidores, SesionActual sesion, TurnoDatabase turnos)
+        RepartidorDatabase repartidores, SesionActual sesion, TurnoDatabase turnos,
+        UbicacionService ubicacion)
     {
         this.database = database;
         this.repartidores = repartidores;
         this.sesion = sesion;
         this.turnos = turnos;
+        this.ubicacion = ubicacion;
         TiempoTurno = "Sin turno abierto";
 
         Saludo = "";
@@ -92,10 +97,25 @@ public partial class JornadaViewModel : ObservableObject
         Fecha = char.ToUpper(fecha[0], cultura) + fecha.Substring(1);
     }
 
+    public void IniciarSeguimiento()
+    {
+        seguimiento?.Dispose();
+        seguimiento = new CancellationTokenSource();
+    }
+
+    public void DetenerSeguimiento()
+    {
+        seguimiento?.Cancel();
+    }
+
     [RelayCommand]
     private async Task RefrescarAsync()
     {
         if (EstaCargando)
+            return;
+
+        var token = seguimiento?.Token ?? CancellationToken.None;
+        if (token.IsCancellationRequested)
             return;
 
         EstaCargando = true;
@@ -103,12 +123,6 @@ public partial class JornadaViewModel : ObservableObject
 
         try
         {
-            Paradas.Clear();
-            todasLasParadas.Clear();
-            TotalEntregas = 0;
-            EntregasCompletadas = 0;
-            TurnoActivo = null;
-            ActualizarTiempoTurno();
 
             if (sesion.RepartidorId == 0)
             {
@@ -137,15 +151,44 @@ public partial class JornadaViewModel : ObservableObject
                 await SembrarParadasAsync();
                 resultado = await database.GetParadasAsync();
             }
+            await database.CompletarCoordenadasPruebaAsync(resultado);
 #endif
 
-            todasLasParadas = resultado;
+            token.ThrowIfCancellationRequested();
+            var miUbicacion = await ubicacion.ObtenerUbicacionActualAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            foreach (var parada in resultado)
+            {
+                if (miUbicacion is not null &&
+                    parada.Latitud is double latitud && parada.Longitud is double longitud)
+                {
+                    double km = Distancia.EnKilometros(
+                        miUbicacion.Latitude, miUbicacion.Longitude, latitud, longitud);
+                    parada.DistanciaKm = km;
+                    parada.DistanciaTexto = $"{km:F1} km";
+                }
+                else
+                {
+                    parada.DistanciaKm = null;
+                    parada.DistanciaTexto = "Sin ubicación";
+                }
+            }
+
+            MensajeEstado = ubicacion.MensajeEstado;
+            todasLasParadas = resultado
+                .OrderBy(p => p.DistanciaKm ?? double.MaxValue)
+                .ThenBy(p => p.Numero)
+                .ToList();
             TotalEntregas = resultado.Count;
             EntregasCompletadas =
                 resultado.Count(p => p.Estado == "Entregada");
 
             AplicarFiltro();
 
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
         }
         catch (Exception ex)
         {

@@ -151,6 +151,8 @@ public partial class ParadaDetalleViewModel : ObservableObject
                 RepartidorId = Parada.RepartidorId,
                 Cliente = Parada.Cliente,
                 Direccion = Parada.Direccion,
+                Latitud = Parada.Latitud,
+                Longitud = Parada.Longitud,
                 Estado = estado,
                 RazonFallo = estado == "Fallida"
                     ? RazonFallo.Trim()

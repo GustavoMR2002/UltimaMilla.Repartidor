@@ -48,6 +48,41 @@ public class ParadasDatabase
             .FirstOrDefaultAsync();
     }
 
+#if DEBUG
+    public async Task CompletarCoordenadasPruebaAsync(List<Parada> paradas)
+    {
+        var coordenadas = new Dictionary<string, (double Latitud, double Longitud)>
+        {
+            ["Abarrotes El Mezquite"] = (25.42155, -100.99969),
+            ["Papelería Los Pinos"] = (25.42499, -101.00873),
+            ["Farmacia Santa Elena"] = (25.41347, -100.96407),
+            ["Panadería La Espiga"] = (25.42099, -100.99974),
+            ["Taller El Roble"] = (25.44042, -100.99129)
+        };
+
+        var database = await conexion.Value;
+        int repartidorId = sesion.RepartidorId;
+
+        foreach (var parada in paradas)
+        {
+            if (parada.Latitud is not null || parada.Longitud is not null ||
+                !coordenadas.TryGetValue(parada.Cliente, out var punto))
+                continue;
+
+            int cambios = await database.ExecuteAsync(
+                "UPDATE Parada SET Latitud = ?, Longitud = ? " +
+                "WHERE Id = ? AND RepartidorId = ? AND Latitud IS NULL AND Longitud IS NULL",
+                punto.Latitud, punto.Longitud, parada.Id, repartidorId);
+
+            if (cambios == 1)
+            {
+                parada.Latitud = punto.Latitud;
+                parada.Longitud = punto.Longitud;
+            }
+        }
+    }
+#endif
+
     public async Task<int> SaveParadaAsync(Parada parada)
     {
         await guardado.WaitAsync();
