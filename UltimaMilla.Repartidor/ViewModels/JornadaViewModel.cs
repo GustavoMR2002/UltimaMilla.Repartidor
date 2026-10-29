@@ -55,6 +55,12 @@ public partial class JornadaViewModel : ObservableObject
     [ObservableProperty]
     public partial string MensajeListaVacia { get; set; }
 
+    [ObservableProperty]
+    public partial int FiltroSeleccionado { get; set; }
+
+    public IReadOnlyList<string> Filtros { get; } =
+        new[] { "Todas", "Pendientes", "Entregadas", "Fallidas" };
+
     public ObservableCollection<Parada> Paradas { get; } = new();
 
     public JornadaViewModel(ParadasDatabase database,
@@ -77,6 +83,15 @@ public partial class JornadaViewModel : ObservableObject
 
     partial void OnOcultarEntregadasChanged(bool value)
     {
+        if (value && FiltroSeleccionado == 2)
+            FiltroSeleccionado = 0;
+        AplicarFiltro();
+    }
+
+    partial void OnFiltroSeleccionadoChanged(int value)
+    {
+        if (value == 2)
+            OcultarEntregadas = false;
         AplicarFiltro();
     }
 
@@ -182,7 +197,7 @@ public partial class JornadaViewModel : ObservableObject
                 .ToList();
             TotalEntregas = resultado.Count;
             EntregasCompletadas =
-                resultado.Count(p => p.Estado == "Entregada");
+                resultado.Count(p => p.Estado == EstadoEntrega.Entregada);
 
             AplicarFiltro();
 
@@ -276,15 +291,26 @@ public partial class JornadaViewModel : ObservableObject
     {
         Paradas.Clear();
 
+        EstadoEntrega? estado = FiltroSeleccionado switch
+        {
+            1 => EstadoEntrega.Pendiente,
+            2 => EstadoEntrega.Entregada,
+            3 => EstadoEntrega.Fallida,
+            _ => null
+        };
+
         foreach (var parada in todasLasParadas)
         {
-            if (!OcultarEntregadas || parada.Estado != "Entregada")
-                Paradas.Add(parada);
+            if (estado is not null && parada.Estado != estado.Value)
+                continue;
+            if (OcultarEntregadas && parada.Estado == EstadoEntrega.Entregada)
+                continue;
+            Paradas.Add(parada);
         }
 
-        MensajeListaVacia = OcultarEntregadas
-            ? "No hay paradas pendientes ni fallidas"
-            : "No tienes paradas hoy";
+        MensajeListaVacia = todasLasParadas.Count == 0
+            ? "No tienes paradas hoy"
+            : "No hay paradas con el filtro seleccionado";
     }
 
     private async Task SembrarParadasAsync()
@@ -296,35 +322,35 @@ public partial class JornadaViewModel : ObservableObject
                 Numero = 1,
                 Cliente = "Abarrotes El Mezquite",
                 Direccion = "Calle Nogal 120, Saltillo",
-                Estado = "Pendiente"
+                Estado = EstadoEntrega.Pendiente
             },
             new()
             {
                 Numero = 2,
                 Cliente = "Papelería Los Pinos",
                 Direccion = "Calle Pino 245, Saltillo",
-                Estado = "Entregada"
+                Estado = EstadoEntrega.Entregada
             },
             new()
             {
                 Numero = 3,
                 Cliente = "Farmacia Santa Elena",
                 Direccion = "Av. del Valle 380, Saltillo",
-                Estado = "Pendiente"
+                Estado = EstadoEntrega.Pendiente
             },
             new()
             {
                 Numero = 4,
                 Cliente = "Panadería La Espiga",
                 Direccion = "Calle Trigo 56, Saltillo",
-                Estado = "Entregada"
+                Estado = EstadoEntrega.Entregada
             },
             new()
             {
                 Numero = 5,
                 Cliente = "Taller El Roble",
                 Direccion = "Calle Roble 710, Saltillo",
-                Estado = "Pendiente"
+                Estado = EstadoEntrega.Pendiente
             }
         };
 

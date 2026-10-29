@@ -45,13 +45,13 @@ public partial class ParadaDetalleViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ReintentarEntregaCommand))]
     public partial bool EstaOcupado { get; set; }
 
-    public bool EsEntregada => Parada?.Estado == "Entregada";
-    public bool EsFallida => Parada?.Estado == "Fallida";
+    public bool EsEntregada => Parada?.Estado == EstadoEntrega.Entregada;
+    public bool EsFallida => Parada?.Estado == EstadoEntrega.Fallida;
 
     public bool PuedeEditar =>
         !EstaOcupado && TieneTurnoAbierto &&
         Parada is not null &&
-        !EsEntregada;
+        ReglasEntrega.PuedeFallar(Parada);
 
     public ParadaDetalleViewModel(ParadasDatabase database, TurnoDatabase turnos)
     {
@@ -79,8 +79,12 @@ public partial class ParadaDetalleViewModel : ObservableObject
 
             if (Parada is null)
                 MensajeEstado = "No se encontró esta parada.";
-            else if (!TieneTurnoAbierto && !EsEntregada)
-                MensajeEstado = "Inicia un turno en Mi jornada para modificar esta parada.";
+            else if (EsEntregada)
+                MensajeEstado = "Esta parada ya fue entregada y no puede modificarse.";
+            else if (EsFallida)
+                MensajeEstado = "Reintenta esta parada para devolverla a pendientes.";
+            else if (!TieneTurnoAbierto)
+                MensajeEstado = "Inicia un turno en Mi jornada para registrar una entrega o un fallo.";
         }
         catch (Exception ex)
         {
@@ -94,7 +98,8 @@ public partial class ParadaDetalleViewModel : ObservableObject
 
     private bool PuedeMarcarEntregada()
     {
-        return PuedeEditar;
+        return !EstaOcupado && TieneTurnoAbierto &&
+            Parada is not null && ReglasEntrega.PuedeEntregar(Parada);
     }
 
     private bool PuedeMarcarFallida()
@@ -104,40 +109,44 @@ public partial class ParadaDetalleViewModel : ObservableObject
 
     private bool PuedeReintentar()
     {
-        return PuedeEditar && EsFallida;
+        return !EstaOcupado && Parada is not null && ReglasEntrega.PuedeReintentar(Parada);
     }
 
     [RelayCommand(CanExecute = nameof(PuedeMarcarEntregada))]
     private async Task MarcarEntregadaAsync()
     {
-        if (!PuedeMarcarEntregada())
-            return;
-
-        await GuardarEstadoAsync("Entregada");
+        await GuardarEstadoAsync(EstadoEntrega.Entregada);
     }
 
     [RelayCommand(CanExecute = nameof(PuedeMarcarFallida))]
     private async Task MarcarFallidaAsync()
     {
-        if (!PuedeMarcarFallida())
-            return;
-
-        await GuardarEstadoAsync("Fallida");
+        await GuardarEstadoAsync(EstadoEntrega.Fallida);
     }
 
     [RelayCommand(CanExecute = nameof(PuedeReintentar))]
     private async Task ReintentarEntregaAsync()
     {
-        if (!PuedeReintentar())
-            return;
-
-        await GuardarEstadoAsync("Pendiente");
+        await GuardarEstadoAsync(EstadoEntrega.Pendiente);
     }
 
-    private async Task GuardarEstadoAsync(string estado)
+    private async Task GuardarEstadoAsync(EstadoEntrega estado)
     {
-        if (!PuedeEditar || Parada is null)
+        if (EstaOcupado || Parada is null)
             return;
+
+        string? error = ReglasEntrega.ValidarCambio(Parada, estado, RazonFallo);
+        if (error is not null)
+        {
+            MensajeEstado = error;
+            return;
+        }
+
+        if (estado != EstadoEntrega.Pendiente && !TieneTurnoAbierto)
+        {
+            MensajeEstado = "Inicia un turno antes de registrar una entrega o un fallo.";
+            return;
+        }
 
         EstaOcupado = true;
         MensajeEstado = "";
@@ -154,7 +163,7 @@ public partial class ParadaDetalleViewModel : ObservableObject
                 Latitud = Parada.Latitud,
                 Longitud = Parada.Longitud,
                 Estado = estado,
-                RazonFallo = estado == "Fallida"
+                RazonFallo = estado == EstadoEntrega.Fallida
                     ? RazonFallo.Trim()
                     : null,
                 ModificadoEn = DateTime.Now

@@ -50,11 +50,11 @@ public partial class HistoricoViewModel : ObservableObject
             var desdeMes = new DateTime(ahora.Year, ahora.Month, 1);
 
             EntregasEstaSemana = todas.Count(p =>
-                p.Estado == "Entregada" &&
+                p.Estado == EstadoEntrega.Entregada &&
                 p.ModificadoEn >= desdeSemana && p.ModificadoEn <= ahora);
 
             var delMes = todas.Where(p =>
-                    p.Estado == "Entregada" &&
+                    p.Estado == EstadoEntrega.Entregada &&
                     p.ModificadoEn >= desdeMes && p.ModificadoEn <= ahora)
                 .OrderByDescending(p => p.ModificadoEn);
 

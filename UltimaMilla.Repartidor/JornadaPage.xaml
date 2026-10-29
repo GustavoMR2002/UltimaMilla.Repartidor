@@ -89,12 +89,14 @@
                     Command="{Binding AlternarTurnoCommand}" />
         </Grid>
 
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
-            <Label Text="Ocultar entregadas"
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <Picker Title="Estado" ItemsSource="{Binding Filtros}"
+                    SelectedIndex="{Binding FiltroSeleccionado, Mode=TwoWay}" />
+            <Label Grid.Column="1" Text="Ocultar entregadas"
                    VerticalOptions="Center"
                    Style="{StaticResource TextoSecundario}" />
 
-            <Switch Grid.Column="1"
+            <Switch Grid.Column="2"
                     IsToggled="{Binding OcultarEntregadas, Mode=TwoWay}" />
         </Grid>
 
@@ -165,36 +167,17 @@
                                        FontSize="14"
                                        TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
 
-                                <Label Text="{Binding Estado}">
-                                    <Label.Style>
-                                        <Style TargetType="Label">
-                                            <Setter Property="FontSize" Value="12" />
-                                            <Setter Property="TextColor" Value="Gray" />
+                                <Label Text="{Binding Estado, Converter={StaticResource EstadoADisplay}}"
+                                       TextColor="{Binding Estado, Converter={StaticResource EstadoAColor}}"
+                                       FontSize="14" />
 
-                                            <Style.Triggers>
-                                                <DataTrigger TargetType="Label"
-                                                             Binding="{Binding Estado}"
-                                                             Value="Pendiente">
-                                                    <Setter Property="TextColor"
-                                                            Value="{AppThemeBinding Light=#946200, Dark=#FFD166}" />
-                                                </DataTrigger>
-
-                                                <DataTrigger TargetType="Label"
-                                                             Binding="{Binding Estado}"
-                                                             Value="Entregada">
-                                                    <Setter Property="TextColor"
-                                                            Value="{AppThemeBinding Light=#237A36, Dark=#81C784}" />
-                                                </DataTrigger>
-
-                                                <DataTrigger TargetType="Label"
-                                                             Binding="{Binding Estado}"
-                                                             Value="Fallida">
-                                                    <Setter Property="TextColor"
-                                                            Value="{AppThemeBinding Light=#B3261E, Dark=#FFB4AB}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Label.Style>
+                                <Label Text="{Binding TiempoEnFallida}"
+                                       Style="{StaticResource TextoSecundario}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding TiempoEnFallida}" Value="">
+                                            <Setter Property="IsVisible" Value="False" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
                                 </Label>
                             </VerticalStackLayout>
                         </Grid>

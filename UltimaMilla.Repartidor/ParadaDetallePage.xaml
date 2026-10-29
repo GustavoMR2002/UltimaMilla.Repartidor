@@ -19,9 +19,13 @@
             <Label Text="{Binding Parada.Direccion}"
                    Style="{StaticResource TextoSecundario}" />
 
-            <Label Text="{Binding Parada.Estado}"
-                   FontSize="18"
-                   FontAttributes="Bold" />
+            <Label Text="{Binding Parada.Estado, Converter={StaticResource EstadoADisplay}}"
+                   TextColor="{Binding Parada.Estado, Converter={StaticResource EstadoAColor}}"
+                   FontSize="18" FontAttributes="Bold" />
+
+            <Label Text="{Binding Parada.TiempoEnFallida}"
+                   IsVisible="{Binding EsFallida}"
+                   Style="{StaticResource TextoSecundario}" />
 
             <Label Text="{Binding Parada.ModificadoEn,
                           StringFormat='Último cambio: {0:dd/MM/yyyy HH:mm:ss}'}"
