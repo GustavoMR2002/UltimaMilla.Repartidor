@@ -104,7 +104,7 @@ public partial class ParadaDetalleViewModel : ObservableObject
 
     private bool PuedeMarcarFallida()
     {
-        return PuedeEditar && !string.IsNullOrWhiteSpace(RazonFallo);
+        return PuedeEditar && ReglasEntrega.RazonFalloValida(RazonFallo);
     }
 
     private bool PuedeReintentar()

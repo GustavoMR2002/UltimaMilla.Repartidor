@@ -96,10 +96,10 @@ public class ParadasDatabase
                 throw new InvalidOperationException("El estado no es válido.");
 
             if (parada.Estado == EstadoEntrega.Fallida &&
-                string.IsNullOrWhiteSpace(parada.RazonFallo))
+                !ReglasEntrega.RazonFalloValida(parada.RazonFallo))
             {
                 throw new InvalidOperationException(
-                    "Debes indicar la razón del fallo.");
+                    "La razón del fallo debe tener al menos 10 caracteres, sin contar espacios al inicio o al final.");
             }
 
             if (parada.Id == 0)

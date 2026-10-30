@@ -42,6 +42,9 @@ public partial class JornadaViewModel : ObservableObject
     public partial int EntregasCompletadas { get; set; }
 
     [ObservableProperty]
+    public partial int TotalPendientes { get; set; }
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AlternarTurnoCommand))]
     [NotifyCanExecuteChangedFor(nameof(CerrarSesionCommand))]
     public partial bool EstaCargando { get; set; }
@@ -198,6 +201,8 @@ public partial class JornadaViewModel : ObservableObject
             TotalEntregas = resultado.Count;
             EntregasCompletadas =
                 resultado.Count(p => p.Estado == EstadoEntrega.Entregada);
+            TotalPendientes =
+                resultado.Count(p => p.Estado == EstadoEntrega.Pendiente);
 
             AplicarFiltro();
 
@@ -261,6 +266,7 @@ public partial class JornadaViewModel : ObservableObject
             todasLasParadas.Clear();
             TotalEntregas = 0;
             EntregasCompletadas = 0;
+            TotalPendientes = 0;
             Saludo = "";
             await Shell.Current.GoToAsync("//LoginPage");
         }

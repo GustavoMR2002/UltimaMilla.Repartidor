@@ -13,6 +13,9 @@ public static class ReglasEntrega
     public static bool PuedeReintentar(Parada parada) =>
         parada.Estado == EstadoEntrega.Fallida;
 
+    public static bool RazonFalloValida(string? razon) =>
+        !string.IsNullOrWhiteSpace(razon) && razon.Trim().Length >= 10;
+
     public static string? ValidarCambio(Parada parada, EstadoEntrega destino, string? razon)
     {
         if (parada.Estado == EstadoEntrega.Entregada)
@@ -26,8 +29,8 @@ public static class ReglasEntrega
             case EstadoEntrega.Fallida:
                 if (!PuedeFallar(parada))
                     return "Solo una parada pendiente puede marcarse como fallida.";
-                return string.IsNullOrWhiteSpace(razon)
-                    ? "Debes indicar la razón del fallo." : null;
+                return RazonFalloValida(razon)
+                    ? null : "La razón del fallo debe tener al menos 10 caracteres, sin contar espacios al inicio o al final.";
             case EstadoEntrega.Pendiente:
                 return PuedeReintentar(parada)
                     ? null : "Solo una parada fallida puede reintentarse.";

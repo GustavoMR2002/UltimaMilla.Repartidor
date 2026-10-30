@@ -47,7 +47,7 @@
                     </DataTrigger>
                 </VerticalStackLayout.Triggers>
 
-                <Label Text="Razón del fallo"
+                <Label Text="Razón del fallo (mínimo 10 caracteres)"
                        Style="{StaticResource TextoSecundario}" />
 
                 <Entry Text="{Binding RazonFallo, Mode=TwoWay}"

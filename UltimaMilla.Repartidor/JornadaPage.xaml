@@ -37,6 +37,10 @@
 
                 <Label Text="{Binding Fecha}"
                        Style="{StaticResource TextoSecundario}" />
+
+                <Label Text="{Binding TotalPendientes, StringFormat='Pendientes: {0}'}"
+                       FontAttributes="Bold"
+                       Style="{StaticResource TextoSecundario}" />
             </VerticalStackLayout>
 
             <VerticalStackLayout Grid.Column="1"
